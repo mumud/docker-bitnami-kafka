@@ -1,0 +1,50 @@
+version: '3.8'
+services:
+  zookeeper:
+    image: docker.io/bitnami/zookeeper:3.8
+    restart: unless-stopped
+    ports:
+      - "2181:2181"
+    volumes:
+      - "zookeeper_data:/bitnami"
+    environment:
+      - ZOO_ENABLE_AUTH=yes
+      - ZOO_SERVER_USERS=zookeeper
+      - ZOO_SERVER_PASSWORDS=zkpass
+      - ZOO_CLIENT_USER=zkclient
+      - ZOO_CLIENT_PASSWORD=zkpass
+  kafka:
+    image: docker.io/bitnami/kafka:3.2
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+      - "9093:9093"
+    volumes:
+      - "kafka_data:/bitnami"
+    environment:
+      - BITNAMI_DEBUG=true
+      - ALLOW_PLAINTEXT_LISTENER=no
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - KAFKA_CFG_LISTENERS=INTERNAL://:9092,CLIENT://:9093,
+      - KAFKA_CFG_ADVERTISED_LISTENERS=INTERNAL://kafka:9092,CLIENT://localhost:9093
+      - KAFKA_INTER_BROKER_LISTENER_NAME=INTERNAL
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=INTERNAL:SASL_PLAINTEXT,CLIENT:SASL_PLAINTEXT
+      - KAFKA_CFG_SASL_MECHANISM_INTER_BROKER_PROTOCOL=PLAIN
+      #Client credentials
+      - KAFKA_CLIENT_USERS=client1
+      - KAFKA_CLIENT_PASSWORDS=pass1
+      #Interbroker credentials
+      - KAFKA_INTER_BROKER_USER=interbrokeruser
+      - KAFKA_INTER_BROKER_PASSWORD=interbrokerpass
+      #Zookeeper credentials
+      - KAFKA_ZOOKEEPER_PROTOCOL=SASL
+      - KAFKA_ZOOKEEPER_USER=zookeeper
+      - KAFKA_ZOOKEEPER_PASSWORD=zkpass
+    depends_on:
+      - zookeeper
+
+volumes:
+  zookeeper_data:
+    driver: local
+  kafka_data:
+    driver: local
